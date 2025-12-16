@@ -64,6 +64,103 @@
 
 <body>
 
+    <header>
+
+        <img src="images/games.webp" alt="Game Image" width="300" height="150" loading="lazy">
+
+        <h1>
+            Pro Games Collection
+        </h1>
+
+        <p>
+            Displaying expertise in HTML, CSS, Modulae JavaScript without frameworks
+        </p>
+
+    </header>
+
+    <main>
+
+        <section class="controls">
+            <label>Game:</label>
+            <select id="gameSelect">
+                <option value="">-- Select Game --</option>
+                <option value="tictactoe">Tic Tac Toe</option>
+                <option value="rps">Rock Paper Scissors</option>
+                <option value="snake">Snake</option>
+                <option value="memory">Memory Cards</option>
+                <option value="pong">Pong</option>
+            </select>
+
+            <label>Mode:</label>
+            <select id="modeSelect">
+                <option value="1p">1 Player (vs AI)</option>
+                <option value="2p" selected>2 Players</option>
+            </select>
+        </section>
+
+        <!-- Game Containers -->
+        <div id="tictactoe" class="game-container hidden"></div>
+        <div id="rps" class="game-container hidden"></div>
+        <div id="snake" class="game-container hidden"></div>
+        <div id="memory" class="game-container hidden"></div>
+        <div id="pong" class="game-container hidden"></div>
+
+    </main>
+
+    <footer>
+
+        <div id="bytehaven-digital">
+
+            <h3>ByteHaven Tech Solutions</h3>
+
+            <p>Your digital safe Space that turns your Tech Problems into Solutions</p>
+
+            <p><img src="images/icons/location.svg" alt="location icon"> Aba, Abia State, Nigeria</p>
+
+            <p><img src="images/icons/email.svg" alt="email icon"><a
+                    href="mailto:d08178084956@gmail?subject=Inquiry%20Website&body=Hello,%20I%20have%20a%20question%20about..."
+                    target="_blank">Email Us</a>
+            </p>
+
+        </div>
+
+        <div id="socials">
+
+            <h3>Socials</h3>
+
+            <a href="https://github.com/sirdave01/wdd231" target="_blank"><img src="images/github.svg" alt="github"
+                    width="16" height="16" loading="lazy"></a>
+
+            <a href="https://www.linkedin.com/in/caleb-osigwe-294085253/" target="_blank"><img src="images/linkedin.svg"
+                    alt="linkedin" width="16" height="16" loading="lazy"></a>
+
+            <a href="https://wa.me/+2349035677967" target="_blank"><img src="images/whatsapp.svg" alt="whatsapp"
+                    width="16" height="16" loading="lazy"></a>
+
+        </div>
+
+        <hr>
+
+        <div id="live-clock"></div>
+
+        <div id="year-date">
+
+            <p>• <a href="https://youtu.be/WtkcyyMBmLw">YouTube Video</a></p>
+
+            <p>
+                &copy; <span id="currentyear"></span>
+                ByteHaven Tech Solutions Ltd Development Team
+            </p>
+
+            <p><span id="lastModified"></span></p>
+
+
+
+        </div>
+
+
+    </footer>
+
 </body>
 
 </html>
