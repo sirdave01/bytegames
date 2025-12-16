@@ -1,6 +1,6 @@
 import { getHighScore, saveHighScore } from "./storage.mjs";
 
-const container = document.getElementById('flappybird'); // Add <div id="flappybird"> in index.html
+const container = document.querySelector('#flappybird'); 
 let canvas, ctx;
 let bird, pipes, gravity, velocity, score, gameActive, animationId;
 
