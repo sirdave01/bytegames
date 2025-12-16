@@ -1,22 +1,24 @@
+let gameStarted = false;
+
 import { getHighScore, saveHighScore } from "./storage.mjs";
 
-const container = document.querySelector('#flappybird'); 
+const container = document.querySelector('#flappybird');
 let canvas, ctx;
 let bird, pipes, gravity, velocity, score, gameActive, animationId;
 
-// Optional sounds (add later)
-const flapSound = new Audio('../sounds/flap.mp3');
-const pointSound = new Audio('../sounds/point.mp3');
-const hitSound = new Audio('../sounds/hit.mp3');
+const flapSound = new Audio('sounds/flap.mp3');
+const pointSound = new Audio('sounds/point.mp3');
+const hitSound = new Audio('sounds/hit.mp3');
 
 export function initFlappyBird() {
     container.innerHTML = `
-    <h2>Flappy Bird 🐦</h2>
-    <p>Score: <span id="fbScore">0</span> | Best: <span id="fbBest">${getHighScore('flappy')}</span></p>
-    <canvas id="fbCanvas" width="400" height="600"></canvas>
-    <p>Click or Space/Up to flap • Avoid pipes!</p>
-    <button id="fbReset">Restart</button>
-  `;
+        <h2>Flappy Bird 🐦</h2>
+        <p>Score: <span id="fbScore">0</span> | Best: <span id="fbBest">${getHighScore('flappy')}</span></p>
+        <canvas id="fbCanvas" width="400" height="600"></canvas>
+        <p>Click or Space/Up to flap • Avoid pipes!</p>
+        <button id="fbStart">Start Game</button>
+        <button id="fbReset">Restart</button>
+    `;
 
     canvas = container.querySelector('#fbCanvas');
     ctx = canvas.getContext('2d');
@@ -26,26 +28,40 @@ export function initFlappyBird() {
     gravity = 0.5;
     velocity = 0;
     score = 0;
-    gameActive = true;
+    gameActive = false;
 
-    spawnPipe();
     container.querySelector('#fbScore').textContent = score;
 
     canvas.addEventListener('click', flap);
     document.addEventListener('keydown', e => {
-        if ([' ', 'ArrowUp'].includes(e.key)) { e.preventDefault(); flap(); }
+        if ([' ', 'ArrowUp'].includes(e.key)) {
+            e.preventDefault();
+            flap();
+        }
     });
 
     container.querySelector('#fbReset').addEventListener('click', initFlappyBird);
+    container.querySelector('#fbStart').addEventListener('click', () => {
+        initGameState();
+        gameLoop();
+    });
+}
 
-    cancelAnimationFrame(animationId);
-    gameLoop();
+function initGameState() {
+    bird.y = 300;
+    bird.velocity = 0;
+    pipes = [];
+    score = 0;
+    gameActive = true;
+    container.querySelector('#fbScore').textContent = score;
+    spawnPipe();
 }
 
 function flap() {
     if (!gameActive) return;
     velocity = -8;
-    // flapSound.currentTime = 0; flapSound.play();
+    flapSound.currentTime = 0;
+    flapSound.play();
 }
 
 function spawnPipe() {
@@ -62,38 +78,34 @@ function spawnPipe() {
 }
 
 function gameLoop() {
+    if (!gameActive) return;
+
     ctx.fillStyle = '#70c5ce';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Bird physics
     velocity += gravity;
     bird.y += velocity;
 
-    // Draw bird
     ctx.fillStyle = '#ffeb3b';
     ctx.beginPath();
     ctx.arc(bird.x, bird.y, bird.size, 0, Math.PI * 2);
     ctx.fill();
 
-    // Pipes
     pipes.forEach((pipe, i) => {
         pipe.x -= 2;
 
-        // Draw top pipe
         ctx.fillStyle = '#4caf50';
         ctx.fillRect(pipe.x, 0, 80, pipe.top);
-        // Bottom pipe
         ctx.fillRect(pipe.x, canvas.height - pipe.bottom, 80, pipe.bottom);
 
-        // Score
         if (!pipe.passed && pipe.x + 80 < bird.x) {
             score++;
             pipe.passed = true;
             container.querySelector('#fbScore').textContent = score;
-            // pointSound.play();
+            pointSound.currentTime = 0;
+            pointSound.play();
         }
 
-        // Collision
         if (
             bird.x + bird.size > pipe.x && bird.x - bird.size < pipe.x + 80 &&
             (bird.y - bird.size < pipe.top || bird.y + bird.size > canvas.height - pipe.bottom)
@@ -101,22 +113,20 @@ function gameLoop() {
             gameOver();
         }
 
-        // Remove old pipes
         if (pipe.x + 80 < 0) pipes.splice(i, 1);
     });
 
-    // Ground / Ceiling collision
     if (bird.y + bird.size > canvas.height || bird.y - bird.size < 0) gameOver();
 
-    // Spawn new pipe
     if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) spawnPipe();
 
-    if (gameActive) animationId = requestAnimationFrame(gameLoop);
+    animationId = requestAnimationFrame(gameLoop);
 }
 
 function gameOver() {
     gameActive = false;
-    // hitSound.play();
+    hitSound.currentTime = 0;
+    hitSound.play();
     const best = saveHighScore('flappy', score);
     container.querySelector('#fbBest').textContent = best;
     alert(`Game Over! Score: ${score}${score === best ? ' - NEW HIGH SCORE! 🎉' : ''}`);

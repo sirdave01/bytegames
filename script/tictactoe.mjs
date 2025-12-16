@@ -1,27 +1,33 @@
-// tictactoe game console
+let gameStarted = false;
 
 import { getHighScore, saveHighScore } from "./storage.mjs";
 
 const container = document.querySelector('#tictactoe');
-let board = [];
+let board = Array(9).fill('');
 let currentPlayer = 'X';
+let playerWins = 0, opponentWins = 0, draws = 0;
 let gameActive = true;
+
+// Sounds
+const placeSound = new Audio('sounds/place.mp3');
+const winSound = new Audio('sounds/win.mp3');
 
 export function initTicTacToe() {
     const mode = document.querySelector('#modeSelect').value;
-    board = Array(9).fill('');
-    currentPlayer = 'X';
-    gameActive = true;
+    playerWins = 0; opponentWins = 0; draws = 0;
 
     container.innerHTML = `
-    <h2>Tic Tac Toe</h2>
-    <p id="tttStatus">${mode === '1p' ? "Your turn (X)" : "Player X's turn"}</p>
-    <div id="tttBoard"></div>
-    <p class="high-score">Best Wins: <span id="tttBest">${getHighScore('tictactoe')}</span></p>
-    <button id="tttReset">Reset Game</button>
-  `;
+        <h2>Tic Tac Toe</h2>
+        <p id="tttScores">X Wins: 0 | O Wins: 0 | Draws: 0</p>
+        <p id="tttStatus">${mode === '1p' ? 'Your turn (X)' : "Player 1's turn (X)"}</p>
+        <div id="tttBoard"></div>
+        <p class="high-score">Best Wins vs AI: <span id="tttBest">${getHighScore('tictactoe')}</span></p>
+        <button id="tttStart">New Round</button>
+        <button id="tttReset">Reset Scores</button>
+    `;
 
     const boardEl = container.querySelector('#tttBoard');
+    boardEl.innerHTML = '';
     for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
         cell.classList.add('ttt-cell');
@@ -30,31 +36,119 @@ export function initTicTacToe() {
         boardEl.appendChild(cell);
     }
 
-    container.querySelector('#tttReset').addEventListener('click', initTicTacToe);
+    updateBoard();
+    updateScoresDisplay();
+
+    container.querySelector('#tttStart').addEventListener('click', startNewRound);
+    container.querySelector('#tttReset').addEventListener('click', () => {
+        playerWins = opponentWins = draws = 0;
+        updateScoresDisplay();
+        startNewRound();
+    });
+}
+
+function startNewRound() {
+    gameStarted = true;
+    gameActive = true;
+    board = Array(9).fill('');
+    currentPlayer = 'X';
+    updateBoard();
+    updateStatus();
 }
 
 function handleCellClick(index) {
-    const mode = document.querySelector('#modeSelect').value;
-    if (board[index] !== '' || !gameActive) return;
-    if (mode === '1p' && currentPlayer === 'O') return; // AI turn, block human click
+    if (!gameStarted || !gameActive || board[index] !== '') return;
+
+    placeSound.currentTime = 0;
+    placeSound.play();
 
     board[index] = currentPlayer;
-    container.querySelector(`[data-index="${index}"]`).textContent = currentPlayer;
+    updateBoard();
 
     if (checkWin(currentPlayer)) {
-        endGame(`${mode === '1p' ? (currentPlayer === 'X' ? 'You' : 'AI') : 'Player ' + currentPlayer} wins! 🎉`);
-        saveHighScore('tictactoe', parseInt(getHighScore('tictactoe')) + 1);
-        container.querySelector('#tttBest').textContent = getHighScore('tictactoe');
-    } else if (board.every(cell => cell !== '')) {
-        endGame("Draw! 🤝");
-    } else {
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        container.querySelector('#tttStatus').textContent =
-            mode === '1p' ? `${currentPlayer === 'X' ? 'Your' : 'AI'} turn` : `Player ${currentPlayer}'s turn`;
+        winSound.currentTime = 0;
+        winSound.play();
+        endGame(`${currentPlayer} wins the round! 🎉`);
+        currentPlayer === 'X' ? playerWins++ : opponentWins++;
+        return;
+    }
+    if (isDraw()) {
+        endGame('Draw! 🤝');
+        draws++;
+        return;
+    }
 
-        if (mode === '1p' && currentPlayer === 'O' && gameActive) {
-            setTimeout(aiMove, 600);
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    updateStatus();
+
+    const mode = document.querySelector('#modeSelect').value;
+    if (mode === '1p' && currentPlayer === 'O' && gameActive) {
+        setTimeout(aiMove, 600);
+    }
+}
+
+function aiMove() {
+    let bestMove = -1;
+    let bestScore = -Infinity;
+
+    for (let i = 0; i < 9; i++) {
+        if (board[i] === '') {
+            board[i] = 'O';
+            let score = minimax(board, 0, false);
+            board[i] = '';
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = i;
+            }
         }
+    }
+
+    if (bestMove !== -1) {
+        board[bestMove] = 'O';
+        placeSound.currentTime = 0;
+        placeSound.play();
+        updateBoard();
+
+        if (checkWin('O')) {
+            winSound.currentTime = 0;
+            winSound.play();
+            endGame('AI wins the round! 😤');
+            opponentWins++;
+        } else if (isDraw()) {
+            endGame('Draw! 🤝');
+            draws++;
+        } else {
+            currentPlayer = 'X';
+            updateStatus();
+        }
+    }
+}
+
+function minimax(board, depth, isMaximizing) {
+    if (checkWin('O')) return 10 - depth;
+    if (checkWin('X')) return depth - 10;
+    if (isDraw()) return 0;
+
+    if (isMaximizing) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === '') {
+                board[i] = 'O';
+                best = Math.max(best, minimax(board, depth + 1, false));
+                board[i] = '';
+            }
+        }
+        return best;
+    } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === '') {
+                board[i] = 'X';
+                best = Math.min(best, minimax(board, depth + 1, true));
+                board[i] = '';
+            }
+        }
+        return best;
     }
 }
 
@@ -63,37 +157,40 @@ function checkWin(player) {
     return wins.some(combo => combo.every(i => board[i] === player));
 }
 
+function isDraw() {
+    return board.every(cell => cell !== '');
+}
+
 function endGame(message) {
     gameActive = false;
     container.querySelector('#tttStatus').textContent = message;
+    updateScoresDisplay();
+
+    const mode = document.querySelector('#modeSelect').value;
+    if (mode === '1p' && message.includes('X wins')) {
+        const best = saveHighScore('tictactoe', playerWins);
+        container.querySelector('#tttBest').textContent = best;
+    }
 }
 
-function aiMove() {
-    if (!gameActive) return;
-    // Simple AI: win if possible → block → random
-    const player = 'O';
-    const opponent = 'X';
-    const empty = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
-
-    // Win
-    for (let i of empty) {
-        board[i] = player;
-        if (checkWin(player)) { makeMove(i); return; }
-        board[i] = '';
-    }
-    // Block
-    for (let i of empty) {
-        board[i] = opponent;
-        if (checkWin(opponent)) { board[i] = player; makeMove(i); return; }
-        board[i] = '';
-    }
-    // Random
-    const move = empty[Math.floor(Math.random() * empty.length)];
-    board[move] = player;
-    makeMove(move);
+function updateStatus() {
+    const mode = document.querySelector('#modeSelect').value;
+    const text = currentPlayer === 'X'
+        ? (mode === '1p' ? 'Your turn (X)' : "Player 1's turn (X)")
+        : (mode === '1p' ? 'AI thinking...' : "Player 2's turn (O)");
+    container.querySelector('#tttStatus').textContent = text;
 }
 
-function makeMove(index) {
-    container.querySelector(`[data-index="${index}"]`).textContent = 'O';
-    handleCellClick(index); // Reuse logic
+function updateBoard() {
+    const cells = container.querySelectorAll('.ttt-cell');
+    cells.forEach((cell, i) => {
+        cell.textContent = board[i];
+        cell.classList.remove('X', 'O');
+        if (board[i] === 'X') cell.classList.add('X');
+        if (board[i] === 'O') cell.classList.add('O');
+    });
+}
+
+function updateScoresDisplay() {
+    container.querySelector('#tttScores').textContent = `X Wins: ${playerWins} | O Wins: ${opponentWins} | Draws: ${draws}`;
 }

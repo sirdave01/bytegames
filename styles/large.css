@@ -1,0 +1,25 @@
+@media (min-width: 1024px) {
+    .game-container {
+        max-width: 800px;
+        padding: 40px;
+    }
+
+    #tttBoard {
+        width: 450px;
+        height: 450px;
+        gap: 15px;
+    }
+
+    .ttt-cell {
+        font-size: 4rem;
+    }
+
+    canvas {
+        max-width: 700px;
+    }
+
+    #memoryBoard {
+        max-width: 600px;
+        gap: 20px;
+    }
+}

@@ -1,0 +1,211 @@
+/* Reset & Base */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    margin: 0 auto;
+    max-width: 600px;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f4f8;
+    color: #333;
+    line-height: 1.6;
+    transition: background 0.3s, color 0.3s;
+}
+
+body.dark-mode {
+    background: #121212;
+    color: #e0e0e0;
+}
+
+/* Game containers */
+.game-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 90%;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+body.dark-mode .game-container {
+    background: rgba(30, 30, 30, 0.95);
+}
+
+/* Buttons */
+button {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #764ba2;
+}
+
+/* Tic Tac Toe Specific */
+#tttBoard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 8px;
+    width: 280px;
+    height: 280px;
+    margin: 20px auto;
+    padding: 12px;
+    background: linear-gradient(145deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.ttt-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 2.8rem;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.3s;
+    user-select: none;
+}
+
+.ttt-cell:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 1);
+}
+
+.ttt-cell.X {
+    color: #e74c3c;
+    /* Red */
+}
+
+.ttt-cell.O {
+    color: #3498db;
+    /* Blue */
+}
+
+#tttStatus {
+    font-size: 1.2rem;
+    margin: 15px 0;
+    min-height: 1.5em;
+}
+
+/* High score text */
+.high-score {
+    font-style: italic;
+    color: #555;
+}
+
+body.dark-mode .high-score {
+    color: #aaa;
+}
+
+/* Memory Game Cards */
+#memoryBoard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    max-width: 400px;
+    margin: 20px auto;
+}
+
+.card {
+    aspect-ratio: 1 / 1;
+    perspective: 1000px;
+    cursor: pointer;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+}
+
+.card.flipped {
+    transform: rotateY(180deg);
+}
+
+.card .back,
+.card .front {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    border-radius: 10px;
+}
+
+.card .back {
+    background: #667eea;
+    color: white;
+}
+
+.card .front {
+    background: white;
+    transform: rotateY(180deg);
+}
+
+.card.matched .front {
+    background: #a8e6cf;
+}
+
+/* General canvas games */
+canvas {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: block;
+    margin: 20px auto;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+body.dark-mode canvas {
+    background: #1e1e1e;
+}
+
+/* Result text in RPS */
+.result {
+    font-size: 1.4rem;
+    margin: 15px 0;
+    font-weight: bold;
+}
+
+.result.win {
+    color: #27ae60;
+}
+
+.result.lose {
+    color: #e74c3c;
+}
+
+.result.tie {
+    color: #f39c12;
+}
+
+/* RPS buttons */
+.rps-buttons button {
+    font-size: 2rem;
+    padding: 15px 25px;
+}
+
+.hidden {
+    display: none;
+}

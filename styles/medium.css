@@ -1,0 +1,30 @@
+@media (min-width: 768px) {
+    .game-container {
+        max-width: 600px;
+        padding: 30px;
+    }
+
+    #tttBoard {
+        width: 380px;
+        height: 380px;
+        gap: 12px;
+    }
+
+    .ttt-cell {
+        font-size: 3.5rem;
+    }
+
+    canvas {
+        max-width: 500px;
+    }
+
+    #memoryBoard {
+        max-width: 500px;
+        gap: 15px;
+    }
+
+    .rps-buttons button {
+        padding: 20px 35px;
+        font-size: 2.5rem;
+    }
+}

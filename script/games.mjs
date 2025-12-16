@@ -7,6 +7,7 @@ import { initSnake } from "./snake.mjs";
 import { initRPS } from "./rps.mjs";
 import { initPong } from "./pong.mjs";
 import { initMemory } from "./memorygame.mjs";
+import { initFlappyBird } from "./flappy.mjs";
 
 const gameSelect = document.getElementById('gameSelect');
 const modeSelect = document.getElementById('modeSelect');
@@ -32,19 +33,22 @@ function initCurrentGame() {
         rps: initRPS,
         snake: initSnake,
         memory: initMemory,
-        pong: initPong
+        pong: initPong,
+        flappybird: initFlappyBird
     };
     if (initMap[currentGame]) initMap[currentGame]();
 }
 
 // PWA Service Worker
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/sw.mjs')
         .then(() => console.log('SW registered'))
         .catch(err => console.log('SW error:', err));
 }
 
-initHamburger();
-initLiveClock();
-initDarkMode();
-initFooterDate();
+document.addEventListener('DOMContentLoaded', () => {
+    initHamburger();
+    initLiveClock();
+    initDarkMode();
+    initFooterDate();
+});

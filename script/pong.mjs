@@ -1,3 +1,5 @@
+let gameStarted = false;
+
 import { getHighScore, saveHighScore } from "./storage.mjs";
 
 const container = document.querySelector('#pong');
@@ -7,33 +9,40 @@ let animationId;
 
 export function initPong() {
     container.innerHTML = `
-    <h2>Pong Game 🏓</h2>
-    <p id="pongScore">0 : 0</p>
-    <p class="high-score">Highest Score: <span id="pongBest">${getHighScore('pong')}</span></p>
-    <canvas id="pongCanvas" width="600" height="400"></canvas>
-    <p>Left: W/S keys • Right: ↑↓ arrows (2P) | AI plays right (1P)</p>
-    <button id="pongReset">Reset Game</button>
-  `;
+        <h2>Pong Game 🏓</h2>
+        <p id="pongScore">0 : 0</p>
+        <p class="high-score">Highest Score: <span id="pongBest">${getHighScore('pong')}</span></p>
+        <canvas id="pongCanvas" width="600" height="400"></canvas>
+        <p>Left: W/S keys • Right: ↑↓ arrows (2P) | AI plays right (1P)</p>
+        <button id="pongStart">Start Match</button>
+        <button id="pongReset">Reset Game</button>
+    `;
 
     canvas = container.querySelector('#pongCanvas');
     ctx = canvas.getContext('2d');
 
+    resetGameState();
+
+    container.querySelector('#pongReset').addEventListener('click', initPong);
+    container.querySelector('#pongStart').addEventListener('click', () => {
+        gameStarted = true;
+        gameLoop();
+    });
+}
+
+function resetGameState() {
     ball = { x: 300, y: 200, dx: 5, dy: 5, radius: 10 };
     leftPaddle = { y: 160, height: 80, score: 0 };
     rightPaddle = { y: 160, height: 80, score: 0 };
-
     updateScore();
-
-    container.querySelector('#pongReset').addEventListener('click', initPong);
-
-    cancelAnimationFrame(animationId);
-    gameLoop();
 }
 
 function gameLoop() {
+    if (!gameStarted) return;
+
     const mode = document.querySelector('#modeSelect').value;
 
-    // AI for right paddle in 1P
+    // AI movement (1P)
     if (mode === '1p') {
         rightPaddle.y = ball.y - rightPaddle.height / 2;
         rightPaddle.y = Math.max(0, Math.min(400 - rightPaddle.height, rightPaddle.y));
@@ -43,7 +52,7 @@ function gameLoop() {
     ball.x += ball.dx;
     ball.y += ball.dy;
 
-    // Top/bottom collision
+    // Wall collision
     if (ball.y - ball.radius <= 0 || ball.y + ball.radius >= 400) ball.dy *= -1;
 
     // Paddle collision
@@ -90,7 +99,7 @@ function resetBall(direction) {
         const best = saveHighScore('pong', winScore);
         container.querySelector('#pongBest').textContent = best;
         alert(`${winner} wins the match! 🎉${winScore === best ? ' NEW RECORD!' : ''}`);
-        cancelAnimationFrame(animationId);
+        gameStarted = false;
     }
 }
 
