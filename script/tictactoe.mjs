@@ -9,8 +9,8 @@ let playerWins = 0, opponentWins = 0, draws = 0;
 let gameActive = true;
 
 // Sounds
-const placeSound = new Audio('sounds/place.mp3');
-const winSound = new Audio('sounds/win.mp3');
+const placeSound = new Audio('/sounds/place.mp3');
+const winSound = new Audio('/sounds/win.mp3');
 
 export function initTicTacToe() {
     const mode = document.querySelector('#modeSelect').value;

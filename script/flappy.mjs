@@ -6,9 +6,9 @@ const container = document.querySelector('#flappybird');
 let canvas, ctx;
 let bird, pipes, gravity, velocity, score, gameActive, animationId;
 
-const flapSound = new Audio('sounds/flap.mp3');
-const pointSound = new Audio('sounds/point.mp3');
-const hitSound = new Audio('sounds/hit.mp3');
+const flapSound = new Audio('/sounds/flap.mp3');
+const pointSound = new Audio('/sounds/point.mp3');
+const hitSound = new Audio('/sounds/hit.mp3');
 
 export function initFlappyBird() {
     container.innerHTML = `

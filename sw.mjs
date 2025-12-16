@@ -32,17 +32,15 @@ const FILES_TO_CACHE = [
     '/images/whatsapp.svg',
     '/images/icons/location.svg',
     '/images/icons/email.svg',
-
-    // === SOUND FILES (uncomment and add your exact filenames when you create /sounds/ folder) ===
-    '/sounds/bird-flapping-wings-6046.mp3',
-    '/sounds/bullet-hit-metal-84818.mp3',
-    '/sounds/camera-release-sound-from-exposure-by-lunchhouse-236390.mp3',
-    '/sounds/dart-throw-380649.mp3',
-    '/sounds/large-ball-bounce-104128.mp3',
-    '/sounds/page-flip-47177.mp3',
-    '/sounds/point-smooth-beep-230573.mp3',
-    '/sounds/sipping-102672.mp3',
-    '/sounds/winner-game-sound-404167.mp3'
+    // === SOUND FILES ===
+    '/sounds/flap.mp3',
+    '/sounds/point.mp3',
+    '/sounds/hit.mp3',
+    '/sounds/win.mp3',
+    '/sounds/flip.mp3',
+    '/sounds/place.mp3',
+    '/sounds/throw.mp3',
+    '/sounds/bounce.mp3',
 ];
 
 self.addEventListener('install', event => {
@@ -84,21 +82,23 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request)
-            .then(response => {
-                // Return cached version or fetch from network
-                return response || fetch(event.request).then(networkResponse => {
-                    // Optionally cache new responses (skip for large/dynamic files)
-                    if (event.request.method === 'GET') {
+            .then(cachedResponse => {
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+
+                return fetch(event.request).then(networkResponse => {
+                    // Clone BEFORE returning so we can cache it
+                    if (event.request.method === 'GET' && networkResponse.ok) {
+                        const responseToCache = networkResponse.clone();
                         caches.open(CACHE_NAME).then(cache => {
-                            cache.put(event.request, networkResponse.clone());
+                            cache.put(event.request, responseToCache);
                         });
                     }
                     return networkResponse;
+                }).catch(() => {
+                    return caches.match('/index.html');  // Offline fallback
                 });
-            })
-            .catch(() => {
-                // Offline fallback (optional: return a custom offline page)
-                return caches.match('/index.html');
             })
     );
 });

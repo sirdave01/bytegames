@@ -10,10 +10,10 @@ let moves = 0;
 let matched = 0;
 
 // Sounds (add the mp3 files to /sounds/)
-const flipSound = new Audio('sounds/flip.mp3');
-const matchSound = new Audio('sounds/match.mp3');
-const mismatchSound = new Audio('sounds/mismatch.mp3');
-const winSound = new Audio('sounds/win.mp3');
+const flipSound = new Audio('/sounds/flip.mp3');
+const matchSound = new Audio('/sounds/throw.mp3');
+const mismatchSound = new Audio('/sounds/sip.mp3');
+const winSound = new Audio('/sounds/win.mp3');
 
 export function initMemory() {
     moves = 0;
