@@ -1,6 +1,6 @@
 // building the storage system for high scores
 
-export function getHighScores() {
+export function getHighScore() {
 
     const key = `high_${game}`;
     const value = localStorage.getItem(key);
