@@ -8,6 +8,12 @@ let currentPlayer = 'X';
 let playerWins = 0, opponentWins = 0, draws = 0;
 let gameActive = true;
 
+// New variables for the movable variant
+let phase = 'placement'; // 'placement' or 'movement'
+let xPieces = 0;
+let oPieces = 0;
+let selectedIndex = null; // For movement phase: selected piece to move
+
 // Sounds
 const placeSound = new Audio('/sounds/place.mp3');
 const winSound = new Audio('/sounds/win.mp3');
@@ -17,9 +23,9 @@ export function initTicTacToe() {
     playerWins = 0; opponentWins = 0; draws = 0;
 
     container.innerHTML = `
-        <h2>Tic Tac Toe</h2>
+        <h2>Three Men's Morris (Naija Style Tic Tac Toe)</h2>
         <p id="tttScores">X Wins: 0 | O Wins: 0 | Draws: 0</p>
-        <p id="tttStatus">${mode === '1p' ? 'Your turn (X)' : "Player 1's turn (X)"}</p>
+        <p id="tttStatus">${mode === '1p' ? 'Your turn (X) - Place piece' : "Player 1's turn (X) - Place piece"}</p>
         <div id="tttBoard"></div>
         <p class="high-score">Best Wins vs AI: <span id="tttBest">${getHighScore('tictactoe')}</span></p>
         <button id="tttStart">New Round</button>
@@ -52,104 +58,135 @@ function startNewRound() {
     gameActive = true;
     board = Array(9).fill('');
     currentPlayer = 'X';
+    phase = 'placement';
+    xPieces = 0;
+    oPieces = 0;
+    selectedIndex = null;
+    removeHighlights();
     updateBoard();
     updateStatus();
 }
 
 function handleCellClick(index) {
-    if (!gameStarted || !gameActive || board[index] !== '') return;
+    if (!gameStarted || !gameActive) return;
 
     placeSound.currentTime = 0;
     placeSound.play();
 
-    board[index] = currentPlayer;
-    updateBoard();
+    if (phase === 'placement') {
+        // Placement: only on empty cells
+        if (board[index] !== '') return;
 
-    if (checkWin(currentPlayer)) {
-        winSound.currentTime = 0;
-        winSound.play();
-        endGame(`${currentPlayer} wins the round! 🎉`);
-        currentPlayer === 'X' ? playerWins++ : opponentWins++;
-        return;
-    }
-    if (isDraw()) {
-        endGame('Draw! 🤝');
-        draws++;
-        return;
-    }
+        board[index] = currentPlayer;
+        if (currentPlayer === 'X') xPieces++;
+        else oPieces++;
 
+        updateBoard();
+
+        if (checkWin(currentPlayer)) {
+            endGameWin(currentPlayer);
+            return;
+        }
+
+        if (xPieces === 3 && oPieces === 3) {
+            phase = 'movement';
+        }
+
+        switchTurn();
+    } else {
+        // Movement phase
+        if (selectedIndex === null) {
+            // Select own piece
+            if (board[index] !== currentPlayer) return;
+
+            selectedIndex = index;
+            highlightSelected(index);
+        } else {
+            // Try to move to empty adjacent cell
+            if (board[index] !== '' || !isAdjacent(selectedIndex, index)) {
+                // Invalid: deselect
+                selectedIndex = null;
+                removeHighlights();
+                return;
+            }
+
+            board[index] = currentPlayer;
+            board[selectedIndex] = '';
+            selectedIndex = null;
+            removeHighlights();
+
+            updateBoard();
+
+            if (checkWin(currentPlayer)) {
+                endGameWin(currentPlayer);
+                return;
+            }
+
+            switchTurn();
+        }
+    }
+}
+
+function switchTurn() {
     currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
     updateStatus();
 
     const mode = document.querySelector('#modeSelect').value;
     if (mode === '1p' && currentPlayer === 'O' && gameActive) {
-        setTimeout(aiMove, 600);
+        setTimeout(aiMove, 800);
     }
+}
+
+function isAdjacent(from, to) {
+    const pos = i => ({ row: Math.floor(i / 3), col: i % 3 });
+    const f = pos(from);
+    const t = pos(to);
+    return Math.abs(f.row - t.row) + Math.abs(f.col - t.col) === 1; // Only up/down/left/right
 }
 
 function aiMove() {
-    let bestMove = -1;
-    let bestScore = -Infinity;
+    let validMoves = [];
 
-    for (let i = 0; i < 9; i++) {
-        if (board[i] === '') {
-            board[i] = 'O';
-            let score = minimax(board, 0, false);
-            board[i] = '';
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = i;
-            }
-        }
-    }
-
-    if (bestMove !== -1) {
-        board[bestMove] = 'O';
-        placeSound.currentTime = 0;
-        placeSound.play();
-        updateBoard();
-
-        if (checkWin('O')) {
-            winSound.currentTime = 0;
-            winSound.play();
-            endGame('AI wins the round! 😤');
-            opponentWins++;
-        } else if (isDraw()) {
-            endGame('Draw! 🤝');
-            draws++;
-        } else {
-            currentPlayer = 'X';
-            updateStatus();
-        }
-    }
-}
-
-function minimax(board, depth, isMaximizing) {
-    if (checkWin('O')) return 10 - depth;
-    if (checkWin('X')) return depth - 10;
-    if (isDraw()) return 0;
-
-    if (isMaximizing) {
-        let best = -Infinity;
+    if (phase === 'placement') {
+        // Place on any empty cell
         for (let i = 0; i < 9; i++) {
-            if (board[i] === '') {
-                board[i] = 'O';
-                best = Math.max(best, minimax(board, depth + 1, false));
-                board[i] = '';
-            }
+            if (board[i] === '') validMoves.push(i);
         }
-        return best;
     } else {
-        let best = Infinity;
+        // Movement: find own pieces and adjacent empty cells
         for (let i = 0; i < 9; i++) {
-            if (board[i] === '') {
-                board[i] = 'X';
-                best = Math.min(best, minimax(board, depth + 1, true));
-                board[i] = '';
+            if (board[i] === 'O') {
+                for (let j = 0; j < 9; j++) {
+                    if (board[j] === '' && isAdjacent(i, j)) {
+                        validMoves.push({ from: i, to: j });
+                    }
+                }
             }
         }
-        return best;
     }
+
+    if (validMoves.length === 0) return;
+
+    let move;
+    if (phase === 'placement') {
+        move = validMoves[Math.floor(Math.random() * validMoves.length)];
+        board[move] = 'O';
+    } else {
+        move = validMoves[Math.floor(Math.random() * validMoves.length)];
+        board[move.to] = 'O';
+        board[move.from] = '';
+    }
+
+    placeSound.currentTime = 0;
+    placeSound.play();
+    updateBoard();
+
+    if (checkWin('O')) {
+        endGameWin('O');
+        return;
+    }
+
+    switchTurn();
 }
 
 function checkWin(player) {
@@ -157,17 +194,17 @@ function checkWin(player) {
     return wins.some(combo => combo.every(i => board[i] === player));
 }
 
-function isDraw() {
-    return board.every(cell => cell !== '');
-}
-
-function endGame(message) {
+function endGameWin(player) {
+    winSound.currentTime = 0;
+    winSound.play();
     gameActive = false;
+    const message = `${player === 'X' ? 'You' : (document.querySelector('#modeSelect').value === '1p' ? 'AI' : 'Player 2')} wins the round! 🎉`;
     container.querySelector('#tttStatus').textContent = message;
+    player === 'X' ? playerWins++ : opponentWins++;
     updateScoresDisplay();
 
     const mode = document.querySelector('#modeSelect').value;
-    if (mode === '1p' && message.includes('X wins')) {
+    if (mode === '1p' && player === 'X') {
         const best = saveHighScore('tictactoe', playerWins);
         container.querySelector('#tttBest').textContent = best;
     }
@@ -175,20 +212,30 @@ function endGame(message) {
 
 function updateStatus() {
     const mode = document.querySelector('#modeSelect').value;
-    const text = currentPlayer === 'X'
-        ? (mode === '1p' ? 'Your turn (X)' : "Player 1's turn (X)")
-        : (mode === '1p' ? 'AI thinking...' : "Player 2's turn (O)");
+    let text = phase === 'placement' ? 'Place piece' : 'Move piece';
+    text = currentPlayer === 'X'
+        ? (mode === '1p' ? `Your turn (X) - ${text}` : `Player 1's turn (X) - ${text}`)
+        : (mode === '1p' ? `AI ${phase === 'placement' ? 'placing' : 'moving'}...` : `Player 2's turn (O) - ${text}`);
     container.querySelector('#tttStatus').textContent = text;
 }
 
 function updateBoard() {
     const cells = container.querySelectorAll('.ttt-cell');
     cells.forEach((cell, i) => {
-        cell.textContent = board[i];
+        cell.textContent = board[i] || '';
         cell.classList.remove('X', 'O');
         if (board[i] === 'X') cell.classList.add('X');
         if (board[i] === 'O') cell.classList.add('O');
     });
+}
+
+function highlightSelected(i) {
+    removeHighlights();
+    container.querySelectorAll('.ttt-cell')[i].classList.add('selected');
+}
+
+function removeHighlights() {
+    container.querySelectorAll('.ttt-cell').forEach(c => c.classList.remove('selected'));
 }
 
 function updateScoresDisplay() {
